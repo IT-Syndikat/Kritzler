@@ -29,19 +29,19 @@ public class Plotter extends PApplet {
   private static final String BUFFER_DONE_PATH = "buffer_done/";
   private static final String BUFFER_DENIED_PATH = "buffer_denied/";
     
-  private static final int MAX_PLOTTER_X = 7000;
-  private static final int MAX_PLOTTER_Y = 8000;
+  private static final int MAX_PLOTTER_X = 20000;
+  private static final int MAX_PLOTTER_Y = 10000;
   
   //private static final int MAX_SCREEN_X = 800;
-  private static final int MAX_SCREEN_Y = 700; 
+  private static final int MAX_SCREEN_Y = 600; 
   private static final int MENU_X = 190;
   
-  private static final int SCREEN_PADDING = 20;
+  private static final int SCREEN_PADDING = 5;
   
-  private static final int START_X = 4000;
-  private static final int START_Y = 4000;
-  private static final int HOME_X = 7500;
-  private static final int HOME_Y = 7500;
+  private static final int START_X = 0;
+  private static final int START_Y = 0;
+  private static final int HOME_X = 10000;
+  private static final int HOME_Y = 5000;
   
   private static final int STATE_START = 1;
   private static final int STATE_WAITING = 2;
