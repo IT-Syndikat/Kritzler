@@ -49,19 +49,19 @@
 
 
 // distance between both motors (axis) 188 cm
-#define AXIS_DISTANCE_X 21300
-#define AXIS_DISTANCE_Y 23
+#define AXIS_DISTANCE_X 19000
+#define AXIS_DISTANCE_Y 19000
 
 // starting position
 // a = b = 10607 --> 1060.7mm
 // m2s = 0.7853982
 
-#define START_X 10650
-#define START_Y 10985
-#define MIN_X 1200
-#define MAX_X 20700
-#define MIN_Y 3500
-#define MAX_Y 13000
+#define START_X 9500
+#define START_Y 3980
+#define MIN_X 0
+#define MAX_X 19000
+#define MIN_Y 1500
+#define MAX_Y 10000
 
 // pulley radius 10mm
 //#define PULLEY_R 100
@@ -72,7 +72,7 @@
 // circumference 2*PI*r = 62.8 mm 
 
 // quarter step, 800 steps per rotation
-#define STEPS_PER_ROT 400
+#define STEPS_PER_ROT 800
 
 // pen states
 #define PEN_UP 0
@@ -221,8 +221,8 @@ void setup() {
 #define D_STATE_WAIT_SERVO 4
 
 // motor directions
-#define DIR_UP 0
-#define DIR_DOWN 1
+#define DIR_UP 1
+#define DIR_DOWN 0
 
 byte preScaler = 0;
 byte newReadPtr;
@@ -246,7 +246,7 @@ ISR(TIMER2_OVF_vect) {
   byte cmd;
 
   preScaler++;
-  if (preScaler < 4) {
+  if (preScaler < 2) {
     return;
   }
   preScaler = 0;
