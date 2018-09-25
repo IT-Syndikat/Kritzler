@@ -11,7 +11,7 @@
  *
  * 37.5 rot/m quarter step (1ms delay)
  *
- * LED_PIN2 --- 11
+ * LED_PIN2 --- 14
  * LED_PIN1 --- 10
  * DIR2     --- 9
  * STEP2    --- 8
@@ -20,7 +20,7 @@
  * SERVO    --- 5
  * MS3      --- 4
  * ENABLE   --- 3
- * MS1      --- 2 
+ * MS1      --- 2
  *
  *     TRI   SPA
  * A - BLK - RED
@@ -36,21 +36,21 @@
  *
  *
  *
- * MS1  | MS3  | 
+ * MS1  | MS3  |
  * -----+------+--------
  * LOW  | LOW  | quarter
  * HIGH | LOW  | eighth
  * HIGH | HIGH | sixteenth
  *
  */
- 
+
 #include <Servo.h>
 #include <stdlib.h>
 
 
-// distance between both motors (axis) 188 cm
+// distance between both motors (axis) 150 cm
 #define AXIS_DISTANCE_X 21300
-#define AXIS_DISTANCE_Y 23
+#define AXIS_DISTANCE_Y 21300
 
 // starting position
 // a = b = 10607 --> 1060.7mm
@@ -65,22 +65,25 @@
 
 // pulley radius 10mm
 //#define PULLEY_R 100
-// #define PULLEY_R 105
-// tooth size 2mm, 20 teeth wheel.
-#define PULLEY_CIRC 400.0 
+//#define PULLEY_R 96
+//#define PI 3.14159
+// circumference 2*PI*r = 62.8 mm
+#define PULLEY_CIRC 400.0
 #define PI 3.14159
-// circumference 2*PI*r = 62.8 mm 
+
+
 
 // quarter step, 800 steps per rotation
-#define STEPS_PER_ROT 400
+#define STEPS_PER_ROT 3200
 
 // pen states
 #define PEN_UP 0
 #define PEN_DOWN 1
-#define PEN_UP_POS 255
-#define PEN_DOWN_POS 100 
+#define PEN_UP_POS 150
+#define PEN_DOWN_POS 100
 // delay to wait for the pen to go up or down
 #define PEN_DELAY 1000
+
 
 // default speed
 #define PAUSE_DELAY 1
@@ -104,15 +107,16 @@
 
 // pin defines
 #define MS1_PIN 4
-#define ENABLE_PIN A0
-#define MS3_PIN 5
-#define SERVO_PIN 3
-#define STEP_PIN_M1 6
-#define DIR_PIN_M1 7
-#define STEP_PIN_M2 8
-#define DIR_PIN_M2 9
-#define LED_PIN1 10
-#define LED_PIN2 11
+#define ENABLE_PIN 14
+#define MS3_PIN 4
+#define SERVO_PIN 10
+#define STEP_PIN_M1 22
+#define DIR_PIN_M1 23
+#define STEP_PIN_M2 15
+#define DIR_PIN_M2 21
+#define LED_PIN1 27
+#define LED_PIN2 27
+
 
 #define MAX_BUFFER_SIZE 50
 
@@ -152,9 +156,8 @@ void setup() {
   Serial.println("#start up");
 
   // compute mm to steps
-  // m2s = (2 * PI * PULLEY_R) / STEPS_PER_ROT; 
+  //m2s = (2 * PI * PULLEY_R) / STEPS_PER_ROT;
   m2s = PULLEY_CIRC / STEPS_PER_ROT;
-  Serial.print("m2s: "); Serial.println(m2s);
 
   // compute starting pos
   currentX = START_X;
@@ -175,7 +178,7 @@ void setup() {
   pinMode(LED_PIN1, OUTPUT);
   pinMode(LED_PIN2, OUTPUT);
 
-  // blinky hello  
+  // blinky hello
   digitalWrite(LED_PIN1, HIGH);
   digitalWrite(LED_PIN2, LOW);
   delay(1000);
@@ -183,7 +186,7 @@ void setup() {
   digitalWrite(LED_PIN2, HIGH);
   delay(1000);
   digitalWrite(LED_PIN1, HIGH);
-  digitalWrite(LED_PIN2, LOW);  
+  digitalWrite(LED_PIN2, LOW);
   delay(1000);
   digitalWrite(LED_PIN1, LOW);
 
@@ -192,7 +195,7 @@ void setup() {
   // set motors to quarter stepping
   digitalWrite(MS1_PIN, LOW);
   digitalWrite(MS3_PIN, LOW);
-  
+
   // move pen up
   servo.attach(SERVO_PIN);
   penState = PEN_UP;
@@ -201,9 +204,9 @@ void setup() {
 
   // 16 MHz / 8 = 2 MHz (prescaler 8)
   // 2MHz / 256 = 7812.5 Hz
-  TCCR2A = 0;           // normal operation                                                  
-  TCCR2B = (1<<CS21);   // prescaler 8                                                       
-  TIMSK2 = (1<<TOIE2);  // enable overflow interrupt                                         
+  TCCR2A = 0;           // normal operation
+  TCCR2B = (1<<CS20);   // prescaler 4
+  TIMSK2 = (1<<TOIE2);  // enable overflow interrupt
 
   while (Serial.available()) {
     Serial.read();
@@ -213,16 +216,16 @@ void setup() {
 }
 
 
-// driver states 
-#define D_STATE_IDLE 0 
+// driver states
+#define D_STATE_IDLE 0
 #define D_STATE_PULSE 1
 #define D_STATE_PULSE_DOWN 2
 #define D_STATE_PAUSE 3
 #define D_STATE_WAIT_SERVO 4
 
 // motor directions
-#define DIR_UP 0
-#define DIR_DOWN 1
+#define DIR_UP 1
+#define DIR_DOWN 0
 
 byte preScaler = 0;
 byte newReadPtr;
@@ -230,12 +233,12 @@ word idleCount = 0;
 word servoDelay = 0;
 byte driverState = D_STATE_IDLE;
 byte pause_count = 1;
-int dsM1 = 0;
-int dsM2 = 0;
-int dM1 = 0;
-int dM2 = 0;
-int err = 0;
-int e2 = 0;
+long dsM1 = 0;
+long dsM2 = 0;
+long dM1 = 0;
+long dM2 = 0;
+long err = 0;
+long e2 = 0;
 
 /*
  * Timer overflow service routine
@@ -251,6 +254,7 @@ ISR(TIMER2_OVF_vect) {
   }
   preScaler = 0;
 
+
   switch (driverState) {
   case D_STATE_IDLE:
     if (writePtr != readPtr) {
@@ -258,7 +262,7 @@ ISR(TIMER2_OVF_vect) {
       digitalWrite(ENABLE_PIN, LOW);
       digitalWrite(LED_PIN1, HIGH);
       newReadPtr = (readPtr + 1) % MAX_COMMANDS;
-      // read the actual command 
+      // read the actual command
       cmd = cmdBuffer[newReadPtr].cmd;
       if ((cmd != CMD_CHAR_ON) && (cmd != CMD_CHAR_OFF)) {
 	tM1 = cmdBuffer[newReadPtr].targetM1;
@@ -275,7 +279,7 @@ ISR(TIMER2_OVF_vect) {
 	targetM1 = tM1;
 	targetM2 = tM2;
 	// go to pulsing/stepping state ...
-	driverState = D_STATE_PULSE;      
+	driverState = D_STATE_PULSE;
       }
       // ... but move the pen up or down before, if needed
       switch (cmd) {
@@ -384,13 +388,18 @@ ISR(TIMER2_OVF_vect) {
   }
 }
 
-int computeA(long x, long y) {
-  return sqrt(x * x + y * y);
+long computeA(long x, long y) {
+  double xx =x;
+  double yy = y;
+  return long(sqrt(x * x + y * y));
 }
-  
-int computeB(long x, long y) {
-  long distanceX = AXIS_DISTANCE_X - x;
-  return sqrt((distanceX * distanceX) + y * y);
+
+long computeB(long x, long y) {
+  //long distanceX = AXIS_DISTANCE_X - x;
+  //return sqrt((distanceX * distanceX) + y * y);
+  double distanceX = AXIS_DISTANCE_X - x;
+  double yy = y;
+  return long( sqrt((distanceX*distanceX) +yy*yy ) );
 }
 
 char *readToken(char *str, char *buf, char delimiter) {
@@ -520,4 +529,3 @@ void loop() {
   }
 
 }
-
