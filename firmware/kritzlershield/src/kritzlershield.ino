@@ -106,6 +106,7 @@
 #define CMD_CHAR_MOVE_R 'm'
 #define CMD_CHAR_OFF 'o'
 #define CMD_CHAR_ON 'O'
+#define CMD_CHAR_HOME 'h'
 
 // pin defines
 #define MS1_PIN 4
@@ -303,6 +304,7 @@ ISR(TIMER2_OVF_vect) {
 
           case CMD_CHAR_MOVE_A:
           case CMD_CHAR_MOVE_R:
+          case CMD_CHAR_HOME:
     	      if (penState == PEN_DOWN) {
     	        penState = PEN_UP;
     	        servo.write(PEN_UP_POS);
@@ -478,6 +480,11 @@ byte parseLine(char *line) {
     tx = currentX;
     ty = currentY;
     break;
+  case 'h':
+    tcmd = line[0];
+    tx = START_X;
+    ty = START_Y;
+  break;
   default:
     Serial.print("#unknown command: ");
     Serial.println(line[0]);
