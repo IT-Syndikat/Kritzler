@@ -44,6 +44,8 @@
  *
  */
 
+
+#include <Arduino.h>
 #include <Servo.h>
 #include <stdlib.h>
 
@@ -82,11 +84,11 @@
 #define PEN_UP_POS 150
 #define PEN_DOWN_POS 100
 // delay to wait for the pen to go up or down
-#define PEN_DELAY 1000
+#define PEN_DELAY 10000
 
 
 // default speed
-#define PAUSE_DELAY 1
+#define PAUSE_DELAY 0
 
 // possible commands
 #define CMD_NONE 0
@@ -240,166 +242,181 @@ long dM2 = 0;
 long err = 0;
 long e2 = 0;
 
+
 /*
  * Timer overflow service routine
  */
 ISR(TIMER2_OVF_vect) {
-
   long tM1, tM2;
   byte cmd;
 
   preScaler++;
-  if (preScaler < 4) {
+  if (preScaler < 8) {
     return;
   }
   preScaler = 0;
 
-
   switch (driverState) {
-  case D_STATE_IDLE:
-    if (writePtr != readPtr) {
-      idleCount = 0;
-      digitalWrite(ENABLE_PIN, LOW);
-      digitalWrite(LED_PIN1, HIGH);
-      newReadPtr = (readPtr + 1) % MAX_COMMANDS;
-      // read the actual command
-      cmd = cmdBuffer[newReadPtr].cmd;
-      if ((cmd != CMD_CHAR_ON) && (cmd != CMD_CHAR_OFF)) {
-	tM1 = cmdBuffer[newReadPtr].targetM1;
-	tM2 = cmdBuffer[newReadPtr].targetM2;
-	// compute deltas
-	dM1 = abs(tM1 - stepsM1);
-	dM2 = abs(tM2 - stepsM2);
-	err = dM1 - dM2;
-	// set directions
-	dsM1 = (tM1 > stepsM1) ? +1 : -1;
-	dsM2 = (tM2 > stepsM2) ? +1 : -1;
-	digitalWrite(DIR_PIN_M1, (tM1 > stepsM1) ? DIR_UP : DIR_DOWN);
-	digitalWrite(DIR_PIN_M2, (tM2 > stepsM2) ? DIR_DOWN : DIR_UP);
-	targetM1 = tM1;
-	targetM2 = tM2;
-	// go to pulsing/stepping state ...
-	driverState = D_STATE_PULSE;
-      }
-      // ... but move the pen up or down before, if needed
-      switch (cmd) {
-      case CMD_CHAR_ON:
-	digitalWrite(LED_PIN1, HIGH);
+  /* case idle */
+    case D_STATE_IDLE:
+      if (writePtr != readPtr) {
+        idleCount = 0;
         digitalWrite(ENABLE_PIN, LOW);
-	readPtr = newReadPtr;
-	break;
-      case CMD_CHAR_OFF:
-	digitalWrite(LED_PIN1, LOW);
-        digitalWrite(ENABLE_PIN, HIGH);
-	readPtr = newReadPtr;
-	break;
-      case CMD_CHAR_MOVE_A:
-      case CMD_CHAR_MOVE_R:
-	if (penState == PEN_DOWN) {
-	  penState = PEN_UP;
-	  servo.write(PEN_UP_POS);
-	  driverState = D_STATE_WAIT_SERVO;
-	}
-	break;
-      case CMD_CHAR_LINE_A:
-      case CMD_CHAR_LINE_R:
-	if (penState == PEN_UP) {
-	  penState = PEN_DOWN;
-	  servo.write(PEN_DOWN_POS);
-	  driverState = D_STATE_WAIT_SERVO;
-	}
-	break;
+        digitalWrite(LED_PIN1, HIGH);
+        newReadPtr = (readPtr + 1) % MAX_COMMANDS;
+        // read the actual command
+        cmd = cmdBuffer[newReadPtr].cmd;
+        if ((cmd != CMD_CHAR_ON) && (cmd != CMD_CHAR_OFF)) {
+	         tM1 = cmdBuffer[newReadPtr].targetM1;
+	         tM2 = cmdBuffer[newReadPtr].targetM2;
+	         // compute deltas
+        	dM1 = abs(tM1 - stepsM1);
+        	dM2 = abs(tM2 - stepsM2);
+        	err = dM1 - dM2;
+        	// set directions
+        	dsM1 = (tM1 > stepsM1) ? +1 : -1;
+        	dsM2 = (tM2 > stepsM2) ? +1 : -1;
+        	digitalWrite(DIR_PIN_M1, (tM1 > stepsM1) ? DIR_UP : DIR_DOWN);
+        	digitalWrite(DIR_PIN_M2, (tM2 > stepsM2) ? DIR_DOWN : DIR_UP);
+        	targetM1 = tM1;
+        	targetM2 = tM2;
+
+        	// go to pulsing/stepping state ...
+        	driverState = D_STATE_PULSE;
+        }
+
+        // ... but move the pen up or down before, if needed
+
+        switch (cmd) {
+
+          case CMD_CHAR_ON:
+            digitalWrite(LED_PIN1, HIGH);
+            digitalWrite(ENABLE_PIN, LOW);
+	          readPtr = newReadPtr;
+	        break;
+
+          case CMD_CHAR_OFF:
+    	      digitalWrite(LED_PIN1, LOW);
+            digitalWrite(ENABLE_PIN, HIGH);
+    	      readPtr = newReadPtr;
+    	    break;
+
+          case CMD_CHAR_MOVE_A:
+          case CMD_CHAR_MOVE_R:
+    	      if (penState == PEN_DOWN) {
+    	        penState = PEN_UP;
+    	        servo.write(PEN_UP_POS);
+    	        driverState = D_STATE_WAIT_SERVO;
+    	      }
+          break;
+
+          case CMD_CHAR_LINE_A:
+          case CMD_CHAR_LINE_R:
+    	      if (penState == PEN_UP) {
+    	        penState = PEN_DOWN;
+    	        servo.write(PEN_DOWN_POS);
+    	        driverState = D_STATE_WAIT_SERVO;
+    	      }
+    	    break;
+        } /* switch */
+
+        /*
+        Serial.print("state: ");
+        Serial.println(driverState, DEC);
+        Serial.print("target: ");
+        Serial.print(targetM1);
+        Serial.print(", ");
+        Serial.print(targetM2);
+        Serial.print(", delta: ");
+        Serial.print(dsM1);
+        Serial.print(", ");
+        Serial.println(dsM2);
+        */
+      } /* if (writePtr != readPtr) */
+      else {
+        /*
+          idleCount++;
+          if (idleCount == 10000) {
+	           // disable the motors if not in use
+             digitalWrite(LED_PIN1, LOW);
+             digitalWrite(ENABLE_PIN, HIGH);
+          }
+        */
+      }
+    break;
+
+    case D_STATE_WAIT_SERVO:
+      if (servoDelay++ >= PEN_DELAY) {
+        driverState = D_STATE_PULSE;
+        servoDelay = 0;
+      }
+    break;
+
+    case D_STATE_PULSE:
+      e2 = err * 2;
+      if (e2 > -dM2) {
+        err = err - dM2;
+        digitalWrite(STEP_PIN_M1, HIGH);
+        stepsM1 += dsM1;
+      }
+      if (e2 < dM1) {
+        err = err + dM1;
+        digitalWrite(STEP_PIN_M2, HIGH);
+        stepsM2 += dsM2;
       }
       /*
-      Serial.print("state: ");
-      Serial.println(driverState, DEC);
-      Serial.print("target: ");
+      Serial.print("steps: ");
+      Serial.print(stepsM1);
+      Serial.print(", ");
+      Serial.print(stepsM2);
+      Serial.print(", ");
       Serial.print(targetM1);
       Serial.print(", ");
-      Serial.print(targetM2);
-      Serial.print(", delta: ");
-      Serial.print(dsM1);
-      Serial.print(", ");
-      Serial.println(dsM2);
+      Serial.println(targetM2);
       */
-    }
-    else {
-      /*
-      idleCount++;
-      if (idleCount == 10000) {
-	// disable the motors if not in use
-        digitalWrite(LED_PIN1, LOW);
-        digitalWrite(ENABLE_PIN, HIGH);
+      pause_count = 0;
+      driverState = D_STATE_PULSE_DOWN;
+    break;
+
+    case D_STATE_PULSE_DOWN:
+      digitalWrite(STEP_PIN_M1, LOW);
+      digitalWrite(STEP_PIN_M2, LOW);
+      if ((stepsM1 == targetM1) && (stepsM2 == targetM2)) {
+        driverState = D_STATE_IDLE;
+        // signal that we have consumed the command by advancing the read pointer
+        readPtr = newReadPtr;
       }
-      */
-    }
+      else if (pause_count < PAUSE_DELAY) {
+        driverState = D_STATE_PAUSE;
+      }
+      else {
+        driverState = D_STATE_PULSE;
+      }
     break;
-  case D_STATE_WAIT_SERVO:
-    if (servoDelay++ >= PEN_DELAY) {
-      driverState = D_STATE_PULSE;
-      servoDelay = 0;
-    }
+
+    case D_STATE_PAUSE:
+      if (++pause_count >= PAUSE_DELAY) {
+        driverState = D_STATE_PULSE;
+      }
     break;
-  case D_STATE_PULSE:
-    e2 = err * 2;
-    if (e2 > -dM2) {
-      err = err - dM2;
-      digitalWrite(STEP_PIN_M1, HIGH);
-      stepsM1 += dsM1;
-    }
-    if (e2 < dM1) {
-      err = err + dM1;
-      digitalWrite(STEP_PIN_M2, HIGH);
-      stepsM2 += dsM2;
-    }
-    /*
-    Serial.print("steps: ");
-    Serial.print(stepsM1);
-    Serial.print(", ");
-    Serial.print(stepsM2);
-    Serial.print(", ");
-    Serial.print(targetM1);
-    Serial.print(", ");
-    Serial.println(targetM2);
-    */
-    pause_count = 0;
-    driverState = D_STATE_PULSE_DOWN;
-    break;
-  case D_STATE_PULSE_DOWN:
-    digitalWrite(STEP_PIN_M1, LOW);
-    digitalWrite(STEP_PIN_M2, LOW);
-    if ((stepsM1 == targetM1) && (stepsM2 == targetM2)) {
-      driverState = D_STATE_IDLE;
-      // signal that we have consumed the command by advancing the read pointer
-      readPtr = newReadPtr;
-    }
-    else if (pause_count < PAUSE_DELAY) {
-      driverState = D_STATE_PAUSE;
-    }
-    else {
-      driverState = D_STATE_PULSE;
-    }
-    break;
-  case D_STATE_PAUSE:
-    if (++pause_count >= PAUSE_DELAY) {
-      driverState = D_STATE_PULSE;
-    }
-    break;
-  }
+  } /* outer switch */
 }
 
 long computeA(long x, long y) {
-  double xx =x;
+  /* double xx =x;
   double yy = y;
   return long(sqrt(x * x + y * y));
+  */
+  return sqrt(x*x + y*y);
 }
 
 long computeB(long x, long y) {
-  //long distanceX = AXIS_DISTANCE_X - x;
-  //return sqrt((distanceX * distanceX) + y * y);
-  double distanceX = AXIS_DISTANCE_X - x;
+  long distanceX = AXIS_DISTANCE_X - x;
+  return sqrt((distanceX * distanceX) + y * y);
+  /* double distanceX = AXIS_DISTANCE_X - x;
   double yy = y;
   return long( sqrt((distanceX*distanceX) +yy*yy ) );
+  */
 }
 
 char *readToken(char *str, char *buf, char delimiter) {
