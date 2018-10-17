@@ -30,10 +30,10 @@ public class Plotter extends PApplet {
   private static final String BUFFER_DENIED_PATH = "buffer_denied/";
     
   private static final int MAX_PLOTTER_X = 20000;
-  private static final int MAX_PLOTTER_Y = 10000;
+  private static final int MAX_PLOTTER_Y = 15000;
   
   //private static final int MAX_SCREEN_X = 800;
-  private static final int MAX_SCREEN_Y = 600; 
+  private static final int MAX_SCREEN_Y = 800; 
   private static final int MENU_X = 190;
   
   private static final int SCREEN_PADDING = 5;
@@ -229,16 +229,16 @@ public class Plotter extends PApplet {
     startSerial(ports[0]); // default
     
     // setup files
-    y = 310;
+    y = 500;
     cp5.addTextlabel("filelabel")
       .setText("SELECT FILE")
       .setPosition(xsize + 8, y + 2)
       ;
     filesList = cp5.addDropdownList("files")
       .setPosition(xsize + 10, y)
-      .setBarHeight(15)
-      .setItemHeight(15)
-      .setHeight(60)
+      .setBarHeight(20)
+      .setItemHeight(20)
+      .setHeight(280)
       .setWidth(150)
       .setIndex(0)
       ;    
@@ -251,7 +251,7 @@ public class Plotter extends PApplet {
     }
     
     // buttons
-    y = 370;
+    y = 310;
     cp5.addTextlabel("runlabel")
       .setText("RUN")
       .setPosition(xsize + 8, y + 22)
