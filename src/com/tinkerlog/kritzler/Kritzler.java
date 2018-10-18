@@ -180,6 +180,9 @@ public class Kritzler {
     case Instruction.LINE_ABS:
       msg = "L " + (int) (x + tx) + " " + (int) (y + ty) + '\r';
       break;
+    case Instruction.HOME:
+    	msg = "h\r";
+    break;
     }
     
     // Output message to console and write to Serial port

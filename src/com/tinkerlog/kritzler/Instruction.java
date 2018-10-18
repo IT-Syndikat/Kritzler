@@ -6,6 +6,7 @@ public class Instruction {
   public static final int MOVE_REL = 1;
   public static final int LINE_ABS = 2;
   public static final int LINE_REL = 3;
+  public static final int HOME = 4;
 
   public float x;
   public float y;
@@ -41,6 +42,9 @@ public class Instruction {
       break;
     case LINE_ABS:
       commandChar = "L";
+      break;
+    case HOME:
+      commandChar = "h";
       break;
     }
 

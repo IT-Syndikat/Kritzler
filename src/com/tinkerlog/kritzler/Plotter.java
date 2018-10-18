@@ -438,6 +438,8 @@ public class Plotter extends PApplet {
       getAllPaths(paths, shape);
       paths = sortPaths(paths);
       convertToInstructions(currentInstructions, paths);
+      println("adding HOME instruction 2");
+      currentInstructions.add(new Instruction(Instruction.HOME,1,1));
       setupPlotter(currentInstructions);
       state = STATE_PLOTTING;
       break;
@@ -653,6 +655,7 @@ public class Plotter extends PApplet {
    *            RShape to proces
    */
   public void convertToInstructions(List<Instruction> instructions, RShape shape) {
+	println("convertToInstructions");
     // Recurse through any children of current shape
     for (int i = 0; i < shape.countChildren(); i++) {
       RShape s = shape.children[i];
@@ -674,7 +677,9 @@ public class Plotter extends PApplet {
         RPoint p2 = points[k];
         instructions.add(new Instruction(Instruction.LINE_ABS, p2.x, p2.y));
       }
-    }    
+    }
+    println("adding HOME instruction");
+    instructions.add(new Instruction(Instruction.HOME,1,1));
   }
 
   public void convertToInstructions(List<Instruction> instructions, List<RPath> paths) {
