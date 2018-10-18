@@ -29,8 +29,11 @@ public class Plotter extends PApplet {
   private static final String BUFFER_DONE_PATH = "buffer_done/";
   private static final String BUFFER_DENIED_PATH = "buffer_denied/";
     
-  private static final int MAX_PLOTTER_X = 20000;
-  private static final int MAX_PLOTTER_Y = 15000;
+  private static final int MIN_PLOTTER_X = 1200;
+  private static final int MIN_PLOTTER_Y = 3500;
+  private static final int MAX_PLOTTER_X = 20700;
+  private static final int MAX_PLOTTER_Y = 13000;
+  private static final int PADDING = 0;
   
   //private static final int MAX_SCREEN_X = 800;
   private static final int MAX_SCREEN_Y = 800; 
@@ -38,10 +41,10 @@ public class Plotter extends PApplet {
   
   private static final int SCREEN_PADDING = 5;
   
-  private static final int START_X = 0;
-  private static final int START_Y = 0;
-  private static final int HOME_X = 10000;
-  private static final int HOME_Y = 5000;
+  private static final int START_X = 1200;
+  private static final int START_Y = 3500;
+  private static final int HOME_X = 10650;
+  private static final int HOME_Y = 10985;
   
   private static final int STATE_START = 1;
   private static final int STATE_WAITING = 2;
@@ -75,7 +78,7 @@ public class Plotter extends PApplet {
   // private static final float STROKE_WEIGHT_SHAPE = 10.0F;
   private static final float STROKE_WEIGHT_SHAPE = 1.0F;
   private static final int STROKE_SHAPE = 0xFF808080;
-  private static final float DELTA_STEP = 20.0F;
+  private static final float DELTA_STEP = 200.0F;
   private static final float MAX_COMPARE_DELTA = 70.0F;
   
   float screenScale = 0.0F;
@@ -125,16 +128,16 @@ public class Plotter extends PApplet {
     RG.init(this);
 
     // Determine the screen scale and window size
-    screenScale = (MAX_SCREEN_Y - 2F * SCREEN_PADDING) / MAX_PLOTTER_Y;
-    int xsize = (int)(MAX_PLOTTER_X * screenScale) + 2 * SCREEN_PADDING;
-    int ysize = (int)(MAX_PLOTTER_Y * screenScale) + 2 * SCREEN_PADDING;
+    screenScale = (MAX_SCREEN_Y - 2F * SCREEN_PADDING) / (MAX_PLOTTER_Y+PADDING-START_X);
+    int xsize = (int)( (MAX_PLOTTER_X+PADDING-START_X) * screenScale) + 2 * SCREEN_PADDING;
+    int ysize = (int)( (MAX_PLOTTER_Y+PADDING-START_Y) * screenScale) + 2 * SCREEN_PADDING;
     System.out.println(screenScale + " " + xsize + " " + ysize);
     // screenScale *= 10;
     
     smooth();
     size(xsize + MENU_X, ysize);
     
-    graphics = createGraphics((int)(MAX_PLOTTER_X * screenScale), (int)(MAX_PLOTTER_Y * screenScale), P2D);
+    graphics = createGraphics((int)( (MAX_PLOTTER_X+PADDING-START_X) * screenScale), (int)( (MAX_PLOTTER_Y+PADDING-START_Y) * screenScale), P2D);
     // graphics.smooth();  // do this after beginDraw()
     
     background(BACKGROUND_STD);
@@ -396,7 +399,7 @@ public class Plotter extends PApplet {
       shape = null;
       translate(SCREEN_PADDING, SCREEN_PADDING);
       scale(screenScale);
-      rect(0, 0, MAX_PLOTTER_X, MAX_PLOTTER_Y);
+      rect(0, 0, (MAX_PLOTTER_X+PADDING), (MAX_PLOTTER_Y+PADDING));
       state = STATE_WAITING;
       break;
 
@@ -540,28 +543,29 @@ public class Plotter extends PApplet {
     graphics.scale(screenScale * plotterScale);
     graphics.fill(canvasBackground);
  
-    graphics.rect(0, 0, MAX_PLOTTER_X, MAX_PLOTTER_Y);
+    graphics.rect(0, 0, (MAX_PLOTTER_X+PADDING), (MAX_PLOTTER_Y+PADDING));
 
     // Draw the grid
     if (drawGrid) {
       graphics.stroke(STROKE_GRID);
       graphics.strokeWeight(STROKE_WEIGHT_GRID);
 
-      int cols = MAX_PLOTTER_X / 100;
-      int rows = MAX_PLOTTER_Y / 100;
-      for(int i=0; i<cols; i++) {
-        graphics.line(i*100, 0, i*100, MAX_PLOTTER_Y);
+      //int cols = MAX_PLOTTER_X / 100;
+      //int rows = MAX_PLOTTER_Y / 100;
+      for(int i=0; i<MAX_PLOTTER_X; i=i+1000) {
+        graphics.line(i, 0, i, MAX_PLOTTER_Y);
       }
-      for(int i=0; i<rows; i++) {
-        graphics.line(0, i*100, MAX_PLOTTER_X, i*100);
+      for(int i=0; i<MAX_PLOTTER_Y; i=i+1000) {
+        graphics.line(0, i, MAX_PLOTTER_X, i);
       }
     }
 
     // Draw the homing crosshairs
+    /*
     graphics.strokeWeight((float)(STROKE_WEIGHT_GRID * 2));
     graphics.line(MAX_PLOTTER_X/2, 0, MAX_PLOTTER_X/2, MAX_PLOTTER_Y);
     graphics.line(0, MAX_PLOTTER_Y/2, MAX_PLOTTER_X, MAX_PLOTTER_Y/2);
-
+	*/
     graphics.translate(dx, dy);        
 
     // Draw the bounding box of the current shape
