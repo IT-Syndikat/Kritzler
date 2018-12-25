@@ -84,7 +84,7 @@
 #define PEN_UP_POS 150
 #define PEN_DOWN_POS 100
 // delay to wait for the pen to go up or down
-#define PEN_DELAY 10000
+#define PEN_DELAY 3000
 
 
 // default speed

@@ -79,7 +79,7 @@ public class Plotter extends PApplet {
   private static final float STROKE_WEIGHT_SHAPE = 1.0F;
   private static final int STROKE_SHAPE = 0xFF808080;
   private static final float DELTA_STEP = 200.0F;
-  private static final float MAX_COMPARE_DELTA = 70.0F;
+  private static final float MAX_COMPARE_DELTA = 500.0F;
   
   float screenScale = 0.0F;
   float plotterScale = 1.0F;
